@@ -1,0 +1,9 @@
+.DS_Store
+.codex/
+node_modules/
+.env
+tmp/
+output/
+__pycache__/
+.pytest_cache/
+.venv/

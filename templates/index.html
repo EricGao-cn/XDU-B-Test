@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block body_class %}page-home{% endblock %}
+{% block title %}雾霾探测系统{% endblock %}
+
+{% block content %}
+  <section class="hero-card">
+    <p class="eyebrow">Python Demo</p>
+    <h1>定位城市并查看天气与空气质量</h1>
+    <p class="hero-text">
+      首页仅保留题目要求的定位与城市显示。定位信息提交到 Flask 服务端后，可进入详情页查看天气、空气质量和 24 小时趋势。
+    </p>
+  </section>
+
+  <section class="panel-card">
+    <div class="panel-header">
+      <div>
+        <p class="panel-label">定位状态</p>
+        <h2 id="city-name">{{ location.city if location else "未定位" }}</h2>
+      </div>
+      <span id="source-badge" class="badge {{ 'muted' if not location else '' }}">
+        {% if not location %}
+          等待定位
+        {% elif location.source == "ip" %}
+          IP 兜底定位
+        {% else %}
+          精确定位
+        {% endif %}
+      </span>
+    </div>
+
+    <div class="location-grid">
+      <div>
+        <p class="mini-label">省份</p>
+        <p id="province-value">{{ location.province if location else "-" }}</p>
+      </div>
+      <div>
+        <p class="mini-label">区县</p>
+        <p id="district-value">{{ location.district if location else "-" }}</p>
+      </div>
+      <div>
+        <p class="mini-label">经度</p>
+        <p id="longitude-value">
+          {% if location and location.longitude is not none %}{{ "%.4f"|format(location.longitude) }}{% else %}-{% endif %}
+        </p>
+      </div>
+      <div>
+        <p class="mini-label">纬度</p>
+        <p id="latitude-value">
+          {% if location and location.latitude is not none %}{{ "%.4f"|format(location.latitude) }}{% else %}-{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <p id="status-text" class="status-text">
+      {% if location %}
+        上次定位信息已保存，可以直接进入详情页查看结果。
+      {% else %}
+        点击下方按钮开始定位。
+      {% endif %}
+    </p>
+
+    <div class="action-row">
+      <button id="locate-button" class="primary-button">开始定位并保存到服务器</button>
+      <a
+        id="details-link"
+        class="ghost-button {{ '' if location else 'disabled' }}"
+        href="/details.html"
+        {% if not location %}aria-disabled="true"{% endif %}
+      >
+        查看天气详情
+      </a>
+    </div>
+  </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    window.APP_CONFIG = {
+      baiduMapAk: {{ baidu_map_ak|tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='index.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,270 @@
+{
+  "location": {
+    "city": "北京",
+    "province": "北京市",
+    "district": "海淀区",
+    "longitude": 116.4039,
+    "latitude": 39.9151,
+    "source": "gps",
+    "locatedAt": "2026-04-07T14:06:02.831Z",
+    "savedAt": "2026-04-07T14:06:02.836Z",
+    "standardizedCity": "北京",
+    "standardizedProvince": "北京市",
+    "locationId": "101010200"
+  },
+  "weatherNow": {
+    "cityName": "北京",
+    "provinceName": "北京市",
+    "districtName": "海淀区",
+    "observedAt": "2026-04-07T21:50+08:00",
+    "updatedAt": "2026-04-07T21:55+08:00",
+    "text": "晴",
+    "icon": "100",
+    "temp": "24",
+    "feelsLike": "25",
+    "humidity": "47",
+    "windDir": "东北风",
+    "windSpeed": "13",
+    "windScale": "3",
+    "visibility": "16",
+    "pressure": "1008",
+    "fxLink": "https://www.qweather.com/weather/beijing-101010200.html"
+  },
+  "airQuality": {
+    "indexCode": "cn-mep",
+    "indexName": "中国空气质量指数",
+    "aqi": "82",
+    "aqiDisplay": "82",
+    "level": "2",
+    "category": "良",
+    "primaryPollutant": {
+      "code": "pm2p5",
+      "name": "PM2.5"
+    },
+    "health": {
+      "advice": {
+        "generalPopulation": "空气质量可接受，敏感人群减少长时间户外活动。"
+      }
+    },
+    "pollutants": {
+      "pm2p5": {
+        "code": "pm2p5",
+        "concentration": {
+          "value": "61",
+          "unit": "ug/m3"
+        }
+      },
+      "pm10": {
+        "code": "pm10",
+        "concentration": {
+          "value": "93",
+          "unit": "ug/m3"
+        }
+      },
+      "no2": {
+        "code": "no2",
+        "concentration": {
+          "value": "24",
+          "unit": "ug/m3"
+        }
+      },
+      "so2": {
+        "code": "so2",
+        "concentration": {
+          "value": "8",
+          "unit": "ug/m3"
+        }
+      },
+      "co": {
+        "code": "co",
+        "concentration": {
+          "value": "0.8",
+          "unit": "mg/m3"
+        }
+      },
+      "o3": {
+        "code": "o3",
+        "concentration": {
+          "value": "54",
+          "unit": "ug/m3"
+        }
+      }
+    },
+    "stations": [
+      {
+        "name": "海淀监测站"
+      }
+    ]
+  },
+  "hourlyTrend": [
+    {
+      "time": "2026-04-07T00:00:00.000Z",
+      "temp": "18",
+      "humidity": "58",
+      "text": "多云",
+      "icon": "151"
+    },
+    {
+      "time": "2026-04-07T01:00:00.000Z",
+      "temp": "19",
+      "humidity": "61",
+      "text": "多云",
+      "icon": "151"
+    },
+    {
+      "time": "2026-04-07T02:00:00.000Z",
+      "temp": "20",
+      "humidity": "64",
+      "text": "多云",
+      "icon": "151"
+    },
+    {
+      "time": "2026-04-07T03:00:00.000Z",
+      "temp": "21",
+      "humidity": "67",
+      "text": "多云",
+      "icon": "151"
+    },
+    {
+      "time": "2026-04-07T04:00:00.000Z",
+      "temp": "22",
+      "humidity": "70",
+      "text": "多云",
+      "icon": "151"
+    },
+    {
+      "time": "2026-04-07T05:00:00.000Z",
+      "temp": "22",
+      "humidity": "73",
+      "text": "多云",
+      "icon": "151"
+    },
+    {
+      "time": "2026-04-07T06:00:00.000Z",
+      "temp": "22",
+      "humidity": "76",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T07:00:00.000Z",
+      "temp": "21",
+      "humidity": "79",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T08:00:00.000Z",
+      "temp": "20",
+      "humidity": "58",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T09:00:00.000Z",
+      "temp": "19",
+      "humidity": "61",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T10:00:00.000Z",
+      "temp": "17",
+      "humidity": "64",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T11:00:00.000Z",
+      "temp": "16",
+      "humidity": "67",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T12:00:00.000Z",
+      "temp": "15",
+      "humidity": "70",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T13:00:00.000Z",
+      "temp": "14",
+      "humidity": "73",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T14:00:00.000Z",
+      "temp": "14",
+      "humidity": "76",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T15:00:00.000Z",
+      "temp": "14",
+      "humidity": "79",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T16:00:00.000Z",
+      "temp": "15",
+      "humidity": "58",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T17:00:00.000Z",
+      "temp": "16",
+      "humidity": "61",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T18:00:00.000Z",
+      "temp": "17",
+      "humidity": "64",
+      "text": "晴",
+      "icon": "100"
+    },
+    {
+      "time": "2026-04-07T19:00:00.000Z",
+      "temp": "18",
+      "humidity": "67",
+      "text": "多云",
+      "icon": "151"
+    },
+    {
+      "time": "2026-04-07T20:00:00.000Z",
+      "temp": "19",
+      "humidity": "70",
+      "text": "多云",
+      "icon": "151"
+    },
+    {
+      "time": "2026-04-07T21:00:00.000Z",
+      "temp": "21",
+      "humidity": "73",
+      "text": "多云",
+      "icon": "151"
+    },
+    {
+      "time": "2026-04-07T22:00:00.000Z",
+      "temp": "21",
+      "humidity": "76",
+      "text": "多云",
+      "icon": "151"
+    },
+    {
+      "time": "2026-04-07T23:00:00.000Z",
+      "temp": "22",
+      "humidity": "79",
+      "text": "多云",
+      "icon": "151"
+    }
+  ],
+  "updatedAt": "2026-04-07T14:06:03.487Z"
+}

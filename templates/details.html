@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block body_class %}page-details{% endblock %}
+{% block title %}天气详情 - 雾霾探测系统{% endblock %}
+
+{% macro pollutant_value(item) -%}
+  {%- if item and item.concentration -%}
+    {{ item.concentration.value }} {{ item.concentration.unit }}
+  {%- else -%}
+    -
+  {%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+  <section class="hero-card compact">
+    <div class="top-row">
+      <div>
+        <p class="eyebrow">天气详情与空气质量</p>
+        <h1 id="details-city">
+          {% if dashboard %}
+            {{ dashboard.weatherNow.provinceName }}{{ dashboard.weatherNow.cityName }}
+          {% else %}
+            暂无数据
+          {% endif %}
+        </h1>
+      </div>
+      <a class="back-link" href="/">返回首页</a>
+    </div>
+    <p id="details-summary" class="hero-text">
+      {% if dashboard %}
+        当前定位城市为 {{ dashboard.location.city }}，服务端已根据该城市生成天气与空气质量数据。
+      {% else %}
+        请先返回首页完成定位，或检查 live 模式下的环境变量配置。
+      {% endif %}
+    </p>
+  </section>
+
+  <p id="details-status" class="status-text">
+    {% if error_message %}
+      {{ error_message }}
+    {% elif dashboard %}
+      数据更新时间：{{ dashboard.updatedAt }}
+    {% endif %}
+  </p>
+
+  {% if dashboard %}
+    <section class="data-grid">
+      <article class="panel-card">
+        <div class="panel-header">
+          <div>
+            <p class="panel-label">实时天气</p>
+            <h2 id="weather-text">{{ dashboard.weatherNow.text }}</h2>
+          </div>
+          <span id="weather-temp" class="temp-pill">{{ dashboard.weatherNow.temp }}°C</span>
+        </div>
+        <div class="metric-grid">
+          <div><span>体感温度</span><strong id="feels-like">{{ dashboard.weatherNow.feelsLike }}°C</strong></div>
+          <div><span>湿度</span><strong id="weather-humidity">{{ dashboard.weatherNow.humidity }}%</strong></div>
+          <div><span>风向风速</span><strong id="weather-wind">{{ dashboard.weatherNow.windDir }} {{ dashboard.weatherNow.windSpeed }} km/h</strong></div>
+          <div><span>能见度</span><strong id="weather-vis">{{ dashboard.weatherNow.visibility }} km</strong></div>
+        </div>
+        <p id="weather-update" class="caption">实况观测时间：{{ dashboard.weatherNow.observedAt }}</p>
+      </article>
+
+      <article class="panel-card">
+        <div class="panel-header">
+          <div>
+            <p class="panel-label">空气质量指数</p>
+            <h2 id="aqi-value">{{ dashboard.airQuality.aqiDisplay or dashboard.airQuality.aqi or "-" }}</h2>
+          </div>
+          <span id="aqi-category" class="badge">{{ dashboard.airQuality.category or "暂无分类" }}</span>
+        </div>
+        <div class="metric-grid">
+          <div><span>AQI 标准</span><strong id="aqi-standard">{{ dashboard.airQuality.indexName or "-" }}</strong></div>
+          <div><span>首要污染物</span><strong id="aqi-primary">{{ dashboard.airQuality.primaryPollutant.name if dashboard.airQuality.primaryPollutant else "-" }}</strong></div>
+          <div><span>健康提示</span><strong id="aqi-health">{{ dashboard.airQuality.health.advice.generalPopulation if dashboard.airQuality.health and dashboard.airQuality.health.advice else "-" }}</strong></div>
+          <div><span>监测站</span><strong id="aqi-station">{{ dashboard.airQuality.stations[0].name if dashboard.airQuality.stations else "-" }}</strong></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel-card">
+      <div class="panel-header">
+        <div>
+          <p class="panel-label">主要污染物</p>
+          <h2>污染物浓度</h2>
+        </div>
+      </div>
+      <div id="pollutant-grid" class="pollutant-grid">
+        <article class="pollutant-card">
+          <p class="pollutant-name">PM2.5</p>
+          <p class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.pm2p5) }}</p>
+        </article>
+        <article class="pollutant-card">
+          <p class="pollutant-name">PM10</p>
+          <p class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.pm10) }}</p>
+        </article>
+        <article class="pollutant-card">
+          <p class="pollutant-name">NO2</p>
+          <p class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.no2) }}</p>
+        </article>
+        <article class="pollutant-card">
+          <p class="pollutant-name">SO2</p>
+          <p class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.so2) }}</p>
+        </article>
+        <article class="pollutant-card">
+          <p class="pollutant-name">CO</p>
+          <p class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.co) }}</p>
+        </article>
+        <article class="pollutant-card">
+          <p class="pollutant-name">O3</p>
+          <p class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.o3) }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel-card">
+      <div class="panel-header">
+        <div>
+          <p class="panel-label">未来 24 小时趋势</p>
+          <h2>温度与湿度折线图</h2>
+        </div>
+      </div>
+      <div class="chart-frame">{{ trend_svg }}</div>
+    </section>
+  {% endif %}
+{% endblock %}
