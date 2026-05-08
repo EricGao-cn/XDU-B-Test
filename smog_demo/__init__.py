@@ -1,5 +1,5 @@
 from markupsafe import Markup
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request
 
 from .config import get_config
 from .helpers import build_client_location
@@ -17,6 +17,7 @@ def create_app(config=None):
     )
     app.config["JSON_AS_ASCII"] = False
     app.json.ensure_ascii = False
+    app.config["HOST"] = config.host
     app.config["PORT"] = config.port
 
     store = StateStore(config.state_file)
@@ -35,30 +36,28 @@ def create_app(config=None):
     @app.get("/")
     def home():
         current_state = store.read()
+        dashboard = None
+        trend_svg = ""
+        error_message = ""
+        if current_state.get("location"):
+            try:
+                dashboard = load_dashboard_for_response()
+                trend_svg = Markup(build_trend_svg(dashboard.get("hourlyTrend", [])))
+            except DashboardError as error:
+                error_message = str(error)
+
         return render_template(
             "index.html",
             baidu_map_ak=config.baidu_map_ak,
             location=current_state.get("location"),
+            dashboard=dashboard,
+            trend_svg=trend_svg,
+            error_message=error_message,
         )
 
     @app.get("/details.html")
     def details():
-        try:
-            dashboard = load_dashboard_for_response()
-            trend_svg = Markup(build_trend_svg(dashboard.get("hourlyTrend", [])))
-            return render_template(
-                "details.html",
-                dashboard=dashboard,
-                trend_svg=trend_svg,
-                error_message="",
-            )
-        except DashboardError as error:
-            return render_template(
-                "details.html",
-                dashboard=None,
-                trend_svg="",
-                error_message=str(error),
-            )
+        return redirect("/")
 
     @app.post("/api/location")
     def save_location():

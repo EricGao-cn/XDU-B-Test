@@ -10,6 +10,10 @@ const detailsLinkEl = document.getElementById("details-link");
 
 let mapScriptPromise;
 
+function hasBaiduMapApi() {
+  return Boolean(window.BMap && window.BMap.Geolocation && window.BMap.LocalCity);
+}
+
 function setStatus(message, type = "muted") {
   statusTextEl.textContent = message;
   sourceBadgeEl.className = `badge ${type === "muted" ? "muted" : ""}`.trim();
@@ -18,7 +22,9 @@ function setStatus(message, type = "muted") {
 function renderLocation(location) {
   cityNameEl.textContent = location.city || "未定位";
   provinceValueEl.textContent = location.province || "-";
-  districtValueEl.textContent = location.district || "-";
+  if (districtValueEl) {
+    districtValueEl.textContent = location.district || "-";
+  }
   longitudeValueEl.textContent =
     location.longitude === null || location.longitude === undefined
       ? "-"
@@ -27,13 +33,15 @@ function renderLocation(location) {
     location.latitude === null || location.latitude === undefined
       ? "-"
       : Number(location.latitude).toFixed(4);
-  sourceBadgeEl.textContent = location.source === "ip" ? "IP 兜底定位" : "精确定位";
-  detailsLinkEl.classList.remove("disabled");
-  detailsLinkEl.removeAttribute("aria-disabled");
+  sourceBadgeEl.textContent = location.source === "ip" ? "IP 定位" : "精确定位";
+  if (detailsLinkEl) {
+    detailsLinkEl.classList.remove("disabled");
+    detailsLinkEl.removeAttribute("aria-disabled");
+  }
 }
 
 function ensureBaiduMapScript() {
-  if (window.BMap) {
+  if (hasBaiduMapApi()) {
     return Promise.resolve(window.BMap);
   }
 
@@ -43,13 +51,24 @@ function ensureBaiduMapScript() {
 
   if (!mapScriptPromise) {
     mapScriptPromise = new Promise((resolve, reject) => {
+      const callbackName = `initBaiduMap${Date.now()}`;
       const script = document.createElement("script");
+      window[callbackName] = () => {
+        delete window[callbackName];
+        if (hasBaiduMapApi()) {
+          resolve(window.BMap);
+          return;
+        }
+        reject(new Error("百度地图 SDK 已加载，但定位接口不可用，请检查 BAIDU_MAP_AK 的浏览器端服务和 Referer 白名单。"));
+      };
       script.src = `https://api.map.baidu.com/api?v=3.0&ak=${encodeURIComponent(
         window.APP_CONFIG.baiduMapAk
-      )}`;
+      )}&callback=${callbackName}`;
       script.async = true;
-      script.onload = () => resolve(window.BMap);
-      script.onerror = () => reject(new Error("百度地图脚本加载失败"));
+      script.onerror = () => {
+        delete window[callbackName];
+        reject(new Error("百度地图脚本加载失败，请检查网络、BAIDU_MAP_AK 和 Referer 白名单。"));
+      };
       document.head.appendChild(script);
     });
   }
@@ -59,6 +78,11 @@ function ensureBaiduMapScript() {
 
 function detectPreciseLocation() {
   return new Promise((resolve, reject) => {
+    if (!hasBaiduMapApi()) {
+      reject(new Error("百度地图定位接口不可用"));
+      return;
+    }
+
     const geolocation = new window.BMap.Geolocation();
     geolocation.enableSDKLocation();
     geolocation.getCurrentPosition(
@@ -85,19 +109,50 @@ function detectPreciseLocation() {
   });
 }
 
+function reverseGeocode(point) {
+  return new Promise((resolve) => {
+    if (!point || !window.BMap.Geocoder) {
+      resolve(null);
+      return;
+    }
+
+    const geocoder = new window.BMap.Geocoder();
+    let settled = false;
+    const finish = (value) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolve(value);
+    };
+
+    window.setTimeout(() => finish(null), 3000);
+    geocoder.getLocation(point, (result) => {
+      finish(result && result.addressComponents ? result.addressComponents : null);
+    });
+  });
+}
+
 function detectLocationByIp() {
   return new Promise((resolve, reject) => {
+    if (!hasBaiduMapApi()) {
+      reject(new Error("百度地图 IP 城市定位接口不可用"));
+      return;
+    }
+
     const localCity = new window.BMap.LocalCity();
-    localCity.get((result) => {
+    localCity.get(async (result) => {
       if (!result || !result.name) {
         reject(new Error("IP 城市定位失败"));
         return;
       }
 
+      const address = await reverseGeocode(result.center);
+
       resolve({
-        city: result.name,
-        province: "",
-        district: "",
+        city: (address && address.city) || result.name,
+        province: (address && address.province) || "",
+        district: (address && address.district) || "",
         longitude: result.center ? result.center.lng : null,
         latitude: result.center ? result.center.lat : null,
         source: "ip",
@@ -141,7 +196,8 @@ async function locateAndSave() {
     setStatus("正在将定位城市保存到服务器...");
     const savedLocation = await saveLocation(payload);
     renderLocation(savedLocation);
-    setStatus("定位成功，城市信息已保存到服务器。", "");
+    setStatus("定位成功，正在刷新天气数据...", "");
+    window.location.reload();
   } catch (error) {
     setStatus(error.message || "定位失败，请稍后重试。");
   } finally {

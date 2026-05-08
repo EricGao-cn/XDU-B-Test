@@ -17,6 +17,7 @@ def build_config(tmp_path, data_mode="mock"):
         data_mode=data_mode,
         qweather_api_host="https://example.com",
         qweather_api_key="fake-key",
+        host="127.0.0.1",
         port=3000,
     )
 
@@ -57,6 +58,37 @@ def test_save_location_and_fetch_mock_dashboard(tmp_path):
     assert dashboard_data["location"]["city"] == "北京"
     assert dashboard_data["weatherNow"]["cityName"] == "北京"
     assert len(dashboard_data["hourlyTrend"]) == 24
+
+
+def test_home_renders_dashboard_after_location_is_saved(tmp_path):
+    app = create_app(build_config(tmp_path))
+    client = app.test_client()
+    client.post(
+        "/api/location",
+        json={
+            "city": "北京市",
+            "province": "北京市",
+            "longitude": 116.4039,
+            "latitude": 39.9151,
+            "source": "gps",
+        },
+    )
+
+    response = client.get("/")
+    html = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert 'id="aqi-value"' in html
+    assert 'id="trend-chart"' in html
+
+
+def test_details_redirects_to_home(tmp_path):
+    app = create_app(build_config(tmp_path))
+    client = app.test_client()
+
+    response = client.get("/details.html")
+
+    assert response.status_code == 302
+    assert response.headers["Location"] == "/"
 
 
 def test_live_dashboard_errors_when_qweather_request_fails(tmp_path):

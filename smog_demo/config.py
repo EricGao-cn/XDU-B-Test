@@ -36,6 +36,7 @@ class AppConfig:
     data_mode: str
     qweather_api_host: str
     qweather_api_key: str
+    host: str
     port: int
 
 
@@ -60,5 +61,6 @@ def get_config():
         data_mode=data_mode,
         qweather_api_host=_normalize_api_host(qweather_host) if qweather_host else "",
         qweather_api_key=qweather_key,
+        host=os.environ.get("HOST", "127.0.0.1").strip() or "127.0.0.1",
         port=int(os.environ.get("PORT", "3000")),
     )

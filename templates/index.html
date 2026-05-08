@@ -3,48 +3,51 @@
 {% block body_class %}page-home{% endblock %}
 {% block title %}雾霾探测系统{% endblock %}
 
-{% block content %}
-  <section class="hero-card">
-    <p class="eyebrow">Python Demo</p>
-    <h1>定位城市并查看天气与空气质量</h1>
-    <p class="hero-text">
-      首页仅保留题目要求的定位与城市显示。定位信息提交到 Flask 服务端后，可进入详情页查看天气、空气质量和 24 小时趋势。
-    </p>
-  </section>
+{% macro pollutant_value(item) -%}
+  {%- if item and item.concentration -%}
+    {{ item.concentration.value }} {{ item.concentration.unit }}
+  {%- else -%}
+    -
+  {%- endif -%}
+{%- endmacro %}
 
-  <section class="panel-card">
-    <div class="panel-header">
+{% block content %}
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">Smog Monitor</p>
+      <h1>雾霾探测</h1>
+    </div>
+    <span id="source-badge" class="badge {{ 'muted' if not location else '' }}">
+      {% if not location %}
+        等待定位
+      {% elif location.source == "ip" %}
+        IP 定位
+      {% else %}
+        精确定位
+      {% endif %}
+    </span>
+  </header>
+
+  <section class="location-panel">
+    <div class="location-summary">
       <div>
-        <p class="panel-label">定位状态</p>
+        <p class="panel-label">当前城市</p>
         <h2 id="city-name">{{ location.city if location else "未定位" }}</h2>
       </div>
-      <span id="source-badge" class="badge {{ 'muted' if not location else '' }}">
-        {% if not location %}
-          等待定位
-        {% elif location.source == "ip" %}
-          IP 兜底定位
-        {% else %}
-          精确定位
-        {% endif %}
-      </span>
     </div>
 
     <div class="location-grid">
-      <div>
+      <div class="data-cell">
         <p class="mini-label">省份</p>
         <p id="province-value">{{ location.province if location else "-" }}</p>
       </div>
-      <div>
-        <p class="mini-label">区县</p>
-        <p id="district-value">{{ location.district if location else "-" }}</p>
-      </div>
-      <div>
+      <div class="data-cell">
         <p class="mini-label">经度</p>
         <p id="longitude-value">
           {% if location and location.longitude is not none %}{{ "%.4f"|format(location.longitude) }}{% else %}-{% endif %}
         </p>
       </div>
-      <div>
+      <div class="data-cell">
         <p class="mini-label">纬度</p>
         <p id="latitude-value">
           {% if location and location.latitude is not none %}{{ "%.4f"|format(location.latitude) }}{% else %}-{% endif %}
@@ -54,24 +57,142 @@
 
     <p id="status-text" class="status-text">
       {% if location %}
-        上次定位信息已保存，可以直接进入详情页查看结果。
+        定位城市已保存，页面已根据该城市展示天气和空气质量。
       {% else %}
         点击下方按钮开始定位。
       {% endif %}
     </p>
 
     <div class="action-row">
-      <button id="locate-button" class="primary-button">开始定位并保存到服务器</button>
-      <a
-        id="details-link"
-        class="ghost-button {{ '' if location else 'disabled' }}"
-        href="/details.html"
-        {% if not location %}aria-disabled="true"{% endif %}
-      >
-        查看天气详情
-      </a>
+      <button id="locate-button" class="primary-button">重新定位</button>
     </div>
   </section>
+
+  {% if error_message %}
+    <p class="status-text error-text">{{ error_message }}</p>
+  {% endif %}
+
+  {% if dashboard %}
+    <section class="weather-overview">
+      <div class="weather-main">
+        <img
+          class="weather-icon"
+          src="https://icons.qweather.com/assets/icons/{{ dashboard.weatherNow.icon }}.svg"
+          alt="{{ dashboard.weatherNow.text }}"
+        />
+        <div>
+          <p class="panel-label">实时天气</p>
+          <div class="temp-line">
+            <span id="weather-temp">{{ dashboard.weatherNow.temp }}°C</span>
+            <span id="weather-text">{{ dashboard.weatherNow.text }}</span>
+          </div>
+          <p class="compact-caption">
+            {{ dashboard.location.city }} · {{ dashboard.weatherNow.observedAt }}
+          </p>
+        </div>
+      </div>
+
+      <div class="aqi-strip">
+        <div>
+          <p class="mini-label">AQI</p>
+          <strong id="aqi-value">{{ dashboard.airQuality.aqiDisplay or dashboard.airQuality.aqi or "-" }}</strong>
+        </div>
+        <span id="aqi-category" class="badge">{{ dashboard.airQuality.category or "暂无分类" }}</span>
+      </div>
+    </section>
+
+    <p class="status-text">
+      数据更新时间：{{ dashboard.updatedAt }}
+    </p>
+
+    <section class="metric-strip">
+      <div class="metric-item">
+        <span>体感</span>
+        <strong id="feels-like">{{ dashboard.weatherNow.feelsLike }}°C</strong>
+      </div>
+      <div class="metric-item">
+        <span>湿度</span>
+        <strong id="weather-humidity">{{ dashboard.weatherNow.humidity }}%</strong>
+      </div>
+      <div class="metric-item">
+        <span>风速</span>
+        <strong id="weather-wind">{{ dashboard.weatherNow.windDir }} {{ dashboard.weatherNow.windSpeed }} km/h</strong>
+      </div>
+      <div class="metric-item">
+        <span>能见度</span>
+        <strong id="weather-vis">{{ dashboard.weatherNow.visibility }} km</strong>
+      </div>
+    </section>
+
+    <section class="info-panel">
+      <div class="section-title">
+        <h2>空气质量</h2>
+        <span id="aqi-standard">{{ dashboard.airQuality.indexName or "-" }}</span>
+      </div>
+      <div class="detail-list">
+        <div>
+          <span>首要污染物</span>
+          <strong id="aqi-primary">{{ dashboard.airQuality.primaryPollutant.name if dashboard.airQuality.primaryPollutant else "-" }}</strong>
+        </div>
+        <div>
+          <span>监测站</span>
+          <strong id="aqi-station">{{ dashboard.airQuality.stations[0].name if dashboard.airQuality.stations else "-" }}</strong>
+        </div>
+        <div class="wide-row">
+          <span>健康提示</span>
+          <strong id="aqi-health">{{ dashboard.airQuality.health.advice.generalPopulation if dashboard.airQuality.health and dashboard.airQuality.health.advice else "-" }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="info-panel">
+      <div class="section-title">
+        <h2>污染物</h2>
+        <span>浓度</span>
+      </div>
+      <div id="pollutant-grid" class="pollutant-grid">
+        <div class="pollutant-row">
+          <span class="pollutant-name">PM2.5</span>
+          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.pm2p5) }}</strong>
+        </div>
+        <div class="pollutant-row">
+          <span class="pollutant-name">PM10</span>
+          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.pm10) }}</strong>
+        </div>
+        <div class="pollutant-row">
+          <span class="pollutant-name">NO2</span>
+          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.no2) }}</strong>
+        </div>
+        <div class="pollutant-row">
+          <span class="pollutant-name">SO2</span>
+          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.so2) }}</strong>
+        </div>
+        <div class="pollutant-row">
+          <span class="pollutant-name">CO</span>
+          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.co) }}</strong>
+        </div>
+        <div class="pollutant-row">
+          <span class="pollutant-name">O3</span>
+          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.o3) }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="info-panel">
+      <div class="section-title">
+        <h2>24 小时趋势</h2>
+        <span>温度 / 湿度</span>
+      </div>
+      <div class="chart-frame">{{ trend_svg }}</div>
+    </section>
+  {% else %}
+    <section class="empty-panel">
+      <div>
+        <p class="panel-label">等待定位</p>
+        <h2>定位后展示天气和空气质量</h2>
+      </div>
+    </section>
+  {% endif %}
 {% endblock %}
 
 {% block scripts %}

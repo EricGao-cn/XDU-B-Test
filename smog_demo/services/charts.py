@@ -45,11 +45,11 @@ def build_trend_svg(hourly_trend):
     labels = [_format_hour(item.get("time")) for item in hourly_trend]
 
     width = 720
-    height = 240
+    height = 190
     left = 44
     top = 24
     inner_width = width - 72
-    inner_height = height - 72
+    inner_height = height - 64
 
     grid_lines = []
     for step in range(5):
@@ -77,7 +77,7 @@ def build_trend_svg(hourly_trend):
 
     return f"""
 <svg id="trend-chart" viewBox="0 0 {width} {height}" class="trend-svg" aria-label="未来24小时温湿度趋势图" role="img">
-  <rect x="0" y="0" width="{width}" height="{height}" rx="22" fill="#f6f9f8"></rect>
+  <rect x="0" y="0" width="{width}" height="{height}" rx="12" fill="#f7faf9"></rect>
   {''.join(grid_lines)}
   <polyline points="{temp_points}" fill="none" stroke="#c77d1f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
   <polyline points="{humidity_points}" fill="none" stroke="#2d7564" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>

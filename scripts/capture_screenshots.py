@@ -73,26 +73,14 @@ def main():
         home.goto(f"{APP_ORIGIN}/", wait_until="domcontentloaded")
         home.click("#locate-button")
         home.wait_for_function(
-            "document.querySelector('#city-name') && document.querySelector('#city-name').textContent.includes('北京')"
-        )
-        home.screenshot(path=str(ROOT / "output" / "screenshots" / "home.png"))
-
-        details = context.new_page()
-        details.on(
-            "console",
-            lambda msg: errors.append(f"details:{msg.type}:{msg.text}")
-            if msg.type in {"error", "warning"}
-            else None,
-        )
-        details.on("pageerror", lambda error: errors.append(f"details:pageerror:{error}"))
-        details.goto(f"{APP_ORIGIN}/details.html", wait_until="domcontentloaded")
-        details.wait_for_function(
             """
+            document.querySelector('#city-name') &&
+            document.querySelector('#city-name').textContent.includes('北京') &&
             document.querySelector('#aqi-value') &&
             document.querySelector('#aqi-value').textContent.trim() !== '-'
             """
         )
-        details.screenshot(path=str(ROOT / "output" / "screenshots" / "details.png"))
+        home.screenshot(path=str(ROOT / "output" / "screenshots" / "home.png"))
 
         browser.close()
 
