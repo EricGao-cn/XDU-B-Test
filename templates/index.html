@@ -11,11 +11,25 @@
   {%- endif -%}
 {%- endmacro %}
 
+{% macro pollutant_card(name, item, limit, accent) -%}
+  {%- set raw = item.concentration.value|float if item and item.concentration else 0 -%}
+  {%- set meter = raw / limit * 100 if limit else 0 -%}
+  {%- set meter = 100 if meter > 100 else meter -%}
+  {%- set meter = 8 if meter > 0 and meter < 8 else meter -%}
+  <div class="pollutant-row" style="--meter: {{ '%.0f'|format(meter) }}%; --accent: {{ accent }};">
+    <div>
+      <span class="pollutant-name">{{ name }}</span>
+      <strong class="pollutant-value">{{ pollutant_value(item) }}</strong>
+    </div>
+    <span class="pollutant-meter" aria-hidden="true"></span>
+  </div>
+{%- endmacro %}
+
 {% block content %}
   <header class="app-header">
     <div>
-      <p class="eyebrow">Smog Monitor</p>
-      <h1>雾霾探测</h1>
+      <p class="eyebrow">AIR QUALITY COMMAND</p>
+      <h1>雾霾探测系统</h1>
     </div>
     <span id="source-badge" class="badge {{ 'muted' if not location else '' }}">
       {% if not location %}
@@ -28,15 +42,51 @@
     </span>
   </header>
 
-  <section class="location-panel">
-    <div class="location-summary">
+  <section class="command-panel">
+    <div class="scan-grid" aria-hidden="true"></div>
+    <div class="command-topline">
       <div>
-        <p class="panel-label">当前城市</p>
+        <p class="panel-label">当前采样城市</p>
         <h2 id="city-name">{{ location.city if location else "未定位" }}</h2>
       </div>
+      <button id="locate-button" class="primary-button">重新定位</button>
     </div>
 
-    <div class="location-grid">
+    {% if dashboard %}
+      <div class="hero-readout">
+        <div class="aqi-core">
+          <span class="readout-label">AQI</span>
+          <strong id="aqi-value">{{ dashboard.airQuality.aqiDisplay or dashboard.airQuality.aqi or "-" }}</strong>
+          <span id="aqi-category" class="badge risk-badge">{{ dashboard.airQuality.category or "暂无分类" }}</span>
+        </div>
+
+        <div class="weather-core">
+          <img
+            class="weather-icon"
+            src="https://icons.qweather.com/assets/icons/{{ dashboard.weatherNow.icon }}.svg"
+            alt="{{ dashboard.weatherNow.text }}"
+          />
+          <div>
+            <p class="panel-label">实时天气</p>
+            <div class="temp-line">
+              <span id="weather-temp">{{ dashboard.weatherNow.temp }}°C</span>
+              <span id="weather-text">{{ dashboard.weatherNow.text }}</span>
+            </div>
+            <p class="compact-caption">
+              {{ dashboard.location.city }} · {{ dashboard.weatherNow.observedAt }}
+            </p>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="hero-empty">
+        <p class="panel-label">监测状态</p>
+        <h2>等待城市采样</h2>
+        <p>完成定位后将生成天气、AQI、污染物和温湿度趋势。</p>
+      </div>
+    {% endif %}
+
+    <div class="location-grid" aria-label="定位信息">
       <div class="data-cell">
         <p class="mini-label">省份</p>
         <p id="province-value">{{ location.province if location else "-" }}</p>
@@ -57,15 +107,10 @@
 
     <p id="status-text" class="status-text">
       {% if location %}
-        定位城市已保存，页面已根据该城市展示天气和空气质量。
       {% else %}
-        点击下方按钮开始定位。
+        点击“重新定位”开始采样。
       {% endif %}
     </p>
-
-    <div class="action-row">
-      <button id="locate-button" class="primary-button">重新定位</button>
-    </div>
   </section>
 
   {% if error_message %}
@@ -73,39 +118,7 @@
   {% endif %}
 
   {% if dashboard %}
-    <section class="weather-overview">
-      <div class="weather-main">
-        <img
-          class="weather-icon"
-          src="https://icons.qweather.com/assets/icons/{{ dashboard.weatherNow.icon }}.svg"
-          alt="{{ dashboard.weatherNow.text }}"
-        />
-        <div>
-          <p class="panel-label">实时天气</p>
-          <div class="temp-line">
-            <span id="weather-temp">{{ dashboard.weatherNow.temp }}°C</span>
-            <span id="weather-text">{{ dashboard.weatherNow.text }}</span>
-          </div>
-          <p class="compact-caption">
-            {{ dashboard.location.city }} · {{ dashboard.weatherNow.observedAt }}
-          </p>
-        </div>
-      </div>
-
-      <div class="aqi-strip">
-        <div>
-          <p class="mini-label">AQI</p>
-          <strong id="aqi-value">{{ dashboard.airQuality.aqiDisplay or dashboard.airQuality.aqi or "-" }}</strong>
-        </div>
-        <span id="aqi-category" class="badge">{{ dashboard.airQuality.category or "暂无分类" }}</span>
-      </div>
-    </section>
-
-    <p class="status-text">
-      数据更新时间：{{ dashboard.updatedAt }}
-    </p>
-
-    <section class="metric-strip">
+    <section class="metric-strip" aria-label="实时气象指标">
       <div class="metric-item">
         <span>体感</span>
         <strong id="feels-like">{{ dashboard.weatherNow.feelsLike }}°C</strong>
@@ -124,9 +137,12 @@
       </div>
     </section>
 
-    <section class="info-panel">
+    <section class="info-panel air-panel">
       <div class="section-title">
-        <h2>空气质量</h2>
+        <div>
+          <p class="panel-label">AQI INDEX</p>
+          <h2>空气质量判读</h2>
+        </div>
         <span id="aqi-standard">{{ dashboard.airQuality.indexName or "-" }}</span>
       </div>
       <div class="detail-list">
@@ -145,52 +161,34 @@
       </div>
     </section>
 
-    <section class="info-panel">
+    <section class="info-panel pollutant-panel">
       <div class="section-title">
-        <h2>污染物</h2>
-        <span>浓度</span>
+        <div>
+          <p class="panel-label">POLLUTANT MATRIX</p>
+          <h2>污染物监测矩阵</h2>
+        </div>
+        <span>浓度读数</span>
       </div>
       <div id="pollutant-grid" class="pollutant-grid">
-        <div class="pollutant-row">
-          <span class="pollutant-name">PM2.5</span>
-          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.pm2p5) }}</strong>
-        </div>
-        <div class="pollutant-row">
-          <span class="pollutant-name">PM10</span>
-          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.pm10) }}</strong>
-        </div>
-        <div class="pollutant-row">
-          <span class="pollutant-name">NO2</span>
-          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.no2) }}</strong>
-        </div>
-        <div class="pollutant-row">
-          <span class="pollutant-name">SO2</span>
-          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.so2) }}</strong>
-        </div>
-        <div class="pollutant-row">
-          <span class="pollutant-name">CO</span>
-          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.co) }}</strong>
-        </div>
-        <div class="pollutant-row">
-          <span class="pollutant-name">O3</span>
-          <strong class="pollutant-value">{{ pollutant_value(dashboard.airQuality.pollutants.o3) }}</strong>
-        </div>
+        {{ pollutant_card("PM2.5", dashboard.airQuality.pollutants.pm2p5, 150, "#f59e0b") }}
+        {{ pollutant_card("PM10", dashboard.airQuality.pollutants.pm10, 200, "#fb7185") }}
+        {{ pollutant_card("NO2", dashboard.airQuality.pollutants.no2, 120, "#22d3ee") }}
+        {{ pollutant_card("SO2", dashboard.airQuality.pollutants.so2, 80, "#a3e635") }}
+        {{ pollutant_card("CO", dashboard.airQuality.pollutants.co, 3, "#f97316") }}
+        {{ pollutant_card("O3", dashboard.airQuality.pollutants.o3, 160, "#38bdf8") }}
       </div>
     </section>
 
-    <section class="info-panel">
+    <section class="info-panel chart-panel">
       <div class="section-title">
-        <h2>24 小时趋势</h2>
+        <div>
+          <p class="panel-label">24H TELEMETRY</p>
+          <h2>温湿度趋势回放</h2>
+        </div>
         <span>温度 / 湿度</span>
       </div>
       <div class="chart-frame">{{ trend_svg }}</div>
-    </section>
-  {% else %}
-    <section class="empty-panel">
-      <div>
-        <p class="panel-label">等待定位</p>
-        <h2>定位后展示天气和空气质量</h2>
-      </div>
+      <p class="status-text">数据更新时间：{{ dashboard.updatedAt }}</p>
     </section>
   {% endif %}
 {% endblock %}
