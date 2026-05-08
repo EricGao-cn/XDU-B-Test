@@ -7,3 +7,6 @@ output/
 __pycache__/
 .pytest_cache/
 .venv/
+
+.history/
+00_Tasks_to_choose/
